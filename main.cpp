@@ -2,10 +2,17 @@
 //
 
 #include <iostream>
+#include <string>
+
+using namespace std;
 
 int main()
 {
-	std::cout << "Hello World!" << std::endl;
+	string s;
+	
+	getline(cin, s);
+	cout << s << endl;
+	getchar();
 
 	return 0;
 }
