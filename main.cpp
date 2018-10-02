@@ -1,14 +1,13 @@
 // app.cpp : Defines the entry point for the console application.
 //
 
-#include <iostream>
+
 #include <fstream>
-#include <string>
 #include <vector>
 #include <sstream>
 #include <regex>
 
-using namespace std;
+#include "counter.h"
 
 int main(int argc, char* argv[])
 {
@@ -27,11 +26,11 @@ int main(int argc, char* argv[])
 					break;
 				vstup += s;
 			}
-			cout << "pocet znakov: " << vstup.size() << endl;
+
+			cout << "pocet znakov: " << counterl(vstup) << endl;
 		}
 		if (argv[1] == (string)("-w"))
 		{
-			int pocet = 0;
 			while (getline(cin, s))
 			{
 				if (s == "exit")
@@ -40,15 +39,7 @@ int main(int argc, char* argv[])
 				vstup += " " + s;
 			}
 
-			l = (int)vstup.size();
-
-			for (int i = 0; i < l - 1; i++)
-			{
-				if (vstup[i] == ' ' && vstup[i + 1] != ' ')
-					pocet++;
-			}
-
-			cout << "Pocet slov je: " << pocet << endl;
+			cout << "Pocet slov je: " << counterw(vstup) << endl;
 		}
 		if (argv[1] == (string)("-l"))
 		{
@@ -80,25 +71,16 @@ int main(int argc, char* argv[])
 			{
 				vstup += s;
 			}
-			cout << "pocet znakov v subore " << argv[2] << ": " << vstup.size() << endl;
+			cout << "pocet znakov v subore " << argv[2] << ": " << counterl(vstup) << endl;
 		}
 		if (argv[1] == (string)("-w"))
 		{
-			int pocet = 0;
 			while (getline(subor, s)/* && !subor.eof()*/)
 			{
 				vstup += " " + s;
 			}
 
-			l = (int)vstup.size();
-
-			for (int i = 0; i < l - 1; i++)
-			{
-				if (vstup[i] == ' ' && vstup[i + 1] != ' ')
-					pocet++;
-			}
-
-			cout << "Pocet slov v subore" << argv[2] << " je: " << pocet << endl;
+			cout << "Pocet slov v subore" << argv[2] << " je: " << counterw(vstup) << endl;
 		}
 		if (argv[1] == (string)("-l"))
 		{
