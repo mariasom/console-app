@@ -9,10 +9,11 @@
 
 #include "counter.h"
 
+
 int main(int argc, char* argv[])
 {
 	string s, vstup;
-	int l;
+	int l,g;
 
 	if (argc == 1 || argc > 3)
 		return 0;
