@@ -12,7 +12,10 @@ int counterl(string vstup)
 
 int counterw(string vstup)
 {
-	int pocet = 0;
+	int pocet = 1;
+	if (vstup[0] == ' ')
+		pocet = 0;
+
 	int l = (int)vstup.size();
 
 	for (int i = 0; i < l - 1; i++)
@@ -26,6 +29,13 @@ int counterw(string vstup)
 
 int counterr(string vstup)
 {
-	//dooncit
-	return 0;
+	int pocet = 1;
+	int l = (int)vstup.size();
+
+	for (int i = 0; i < l - 1; i++)
+	{
+		if (vstup[i] == '\n')
+			pocet++;
+	}
+	return pocet;
 }

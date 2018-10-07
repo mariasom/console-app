@@ -37,9 +37,8 @@ int main(int argc, char* argv[])
 				if (s == "exit")
 					break;
 
-				vstup += " " + s;
+				vstup += s + " ";
 			}
-
 			cout << "Pocet slov je: " << counterw(vstup) << endl;
 		}
 		if (argv[1] == (string)("-l"))
@@ -49,15 +48,14 @@ int main(int argc, char* argv[])
 			{
 				if (s == "exit")
 					break;
-				riadky++;
+				vstup += s + "\n";
 			}
-			cout << "pocet riadkov: " << riadky << endl;
+			cout << "pocet riadkov: " << counterr(vstup) << endl;
 		}
 	}
 	else if (argc == 3)
 	{
 		fstream subor;
-
 		subor.open(argv[2], fstream::in);
 
 		if (!subor.is_open())
@@ -78,7 +76,7 @@ int main(int argc, char* argv[])
 		{
 			while (getline(subor, s)/* && !subor.eof()*/)
 			{
-				vstup += " " + s;
+				vstup += s + " ";
 			}
 
 			cout << "Pocet slov v subore" << argv[2] << " je: " << counterw(vstup) << endl;
@@ -88,9 +86,9 @@ int main(int argc, char* argv[])
 			int riadky = 0;
 			while (getline(subor, s)/* && !subor.eof()*/)
 			{
-				riadky++;
+				vstup += s + "\n";
 			}
-			cout << "pocet riadkov v subore " << argv[2] << ": " << riadky << endl;
+			cout << "pocet riadkov v subore " << argv[2] << ": " << counterr(vstup) << endl;
 		}
 		subor.close();
 	}
