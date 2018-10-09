@@ -1,7 +1,6 @@
 // app.cpp : Defines the entry point for the console application.
 //
 
-
 #include <fstream>
 #include <vector>
 #include <sstream>
@@ -29,6 +28,7 @@ int main(int argc, char* argv[])
 			}
 
 			cout << "pocet znakov: " << counterl(vstup) << endl;
+			cout << "pocet znakov: " << spocitaj<_char>(vstup) << endl;
 		}
 		if (argv[1] == (string)("-w"))
 		{
@@ -40,6 +40,7 @@ int main(int argc, char* argv[])
 				vstup += s + " ";
 			}
 			cout << "Pocet slov je: " << counterw(vstup) << endl;
+			cout << "Pocet slov je: " << spocitaj<_word>(vstup) << endl;
 		}
 		if (argv[1] == (string)("-l"))
 		{
@@ -51,10 +52,13 @@ int main(int argc, char* argv[])
 				vstup += s + "\n";
 			}
 			cout << "pocet riadkov: " << counterr(vstup) << endl;
+			cout << "pocet riadkov: " << spocitaj<_line>(vstup) << endl;
+
 		}
 	}
 	else if (argc == 3)
 	{
+
 		fstream subor;
 		subor.open(argv[2], fstream::in);
 
@@ -70,7 +74,10 @@ int main(int argc, char* argv[])
 			{
 				vstup += s;
 			}
+
 			cout << "pocet znakov v subore " << argv[2] << ": " << counterl(vstup) << endl;
+			cout << "pocet znakov v subore " << argv[2] << ": " << spocitaj<_char>(vstup) << endl;
+
 		}
 		if (argv[1] == (string)("-w"))
 		{
@@ -80,6 +87,7 @@ int main(int argc, char* argv[])
 			}
 
 			cout << "Pocet slov v subore" << argv[2] << " je: " << counterw(vstup) << endl;
+			cout << "Pocet slov v subore" << argv[2] << " je: " << spocitaj<_word>(vstup) << endl;
 		}
 		if (argv[1] == (string)("-l"))
 		{
@@ -88,7 +96,9 @@ int main(int argc, char* argv[])
 			{
 				vstup += s + "\n";
 			}
+
 			cout << "pocet riadkov v subore " << argv[2] << ": " << counterr(vstup) << endl;
+			cout << "pocet riadkov v subore " << argv[2] << ": " << spocitaj<_line>(vstup) << endl;
 		}
 		subor.close();
 	}
