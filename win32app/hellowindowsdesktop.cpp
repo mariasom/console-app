@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>
-
+#include <afxdlgs.h>
 // Global variables
 
 // The main window class name.
