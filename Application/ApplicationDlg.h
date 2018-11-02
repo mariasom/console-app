@@ -41,9 +41,11 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
-	CImage *img;
+	CImage *m_pimg = nullptr;
 
-	ULONG_PTR(m_gdiplusToken);
+//	ULONG_PTR(m_gdiplusToken);
+//	Gdiplus::Bitmap bmp;
+//	Gdiplus::Bitmap *newbmp; 
 	// Generated message map functions
 	BOOL OnInitDialog() override;
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);

@@ -9,6 +9,7 @@
 #include <utility>
 #include <tuple>
 #include <vector>
+#include <string>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -93,22 +94,26 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 
 	//DRAW BITMAP
 
-	int width = img->GetWidth();
-	int heigth = img->GetHeight();
+	if (m_pimg != nullptr)
+	{
+		//::MessageBox(NULL, __T("tu som"), __T("test"), MB_OK);
 
-	CDC *screenDC = GetDC();
-	CDC mDC;
-	mDC.CreateCompatibleDC(screenDC);
-	CBitmap bitmap;
-	bitmap.CreateCompatibleBitmap(screenDC, width, heigth);
+		CBitmap bmp;
+		CDC bmDC;
+		CBitmap *pOldbmp;
+		BITMAP  bi;
 
-	CBitmap *p_bitmap = mDC.SelectObject(&bitmap);
-	mDC.SetStretchBltMode(HALFTONE);
-	img->StretchBlt(mDC.m_hDC, 0, 0, width, heigth, 0, 0, width, heigth, SRCCOPY);
-	mDC.SelectObject(p_bitmap);
+		bmp.Attach(m_pimg->Detach());
+		bmDC.CreateCompatibleDC(pDC);
 
-	/* m_ctrlImage.SetBitmap((HBITMAP)bitmap.Detach());
-	ReleaseDC(screenDC); */
+		CRect r(lpDI->rcItem);
+		
+		pOldbmp = bmDC.SelectObject(&bmp);
+		bmp.GetBitmap(&bi);
+		pDC->BitBlt(0, 0, r.Width(), r.Height(), &bmDC, 0, 0, SRCCOPY);
+		bmDC.SelectObject(pOldbmp);
+
+	}
 
 	return S_OK;
 }
@@ -211,23 +216,35 @@ HCURSOR CApplicationDlg::OnQueryDragIcon()
 
 void CApplicationDlg::OnFileOpen()
 {
-	CString cesta;
+	//vymazanie predosleho obrazka
+	OnFileClose();
+	
 	//GET FILE NAME AND CREATE GDIPLUS BITMAP
 	CFileDialog jpgdlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Jpg Files (*.jpg)|*.jpg|Png Files (*.png)|*.png||"));
 
-	Gdiplus::GdiplusStartupInput gdiplusstartupinput;
-	GdiplusStartup(&m_gdiplusToken, &gdiplusstartupinput, NULL);
+	//Gdiplus::GdiplusStartupInput gdiplusstartupinput;
+	//GdiplusStartup(&m_gdiplusToken, &gdiplusstartupinput, NULL);
 
 	if (jpgdlg.DoModal() == IDOK) 
 	{
-		cesta = jpgdlg.GetPathName();
+		//std::wstring cesta = jpgdlg.GetPathName();
+		//Gdiplus::Bitmap bmp(cesta.c_str());
+		CString cesta = jpgdlg.GetPathName();
+		m_pimg = new CImage;
+		m_pimg->Load(cesta);
 
-		img->Load(cesta);
-
-		/* wstringggg? 
-		std::wstring filename(L"someImage.jpg");
-		Gdiplus::Bitmap bmp(filename.c_str());
-		*/
+		if (m_pimg != nullptr)
+		{
+			//::MessageBox(NULL, __T("nacitanie OK"), __T(" "), MB_OK | MB_SYSTEMMODAL);
+			//prekleslenie vsetkeho
+			Invalidate();
+		}
+		else
+		{
+			delete m_pimg;
+			//	::MessageBox(NULL, __T("nacitanie FAIL"), __T(" "), MB_OK | MB_SYSTEMMODAL);
+		}
+		
 	}
 }
 
@@ -240,7 +257,12 @@ void CApplicationDlg::OnUpdateFileOpen(CCmdUI *pCmdUI)
 
 void CApplicationDlg::OnFileClose()
 {
-
+	if (m_pimg != nullptr)
+	{
+		delete m_pimg;
+		m_pimg = nullptr;
+		Invalidate();
+	}
 }
 
 
