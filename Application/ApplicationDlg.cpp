@@ -110,9 +110,11 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 		
 		pOldbmp = bmDC.SelectObject(&bmp);
 		bmp.GetBitmap(&bi);
-		pDC->BitBlt(0, 0, r.Width(), r.Height(), &bmDC, 0, 0, SRCCOPY);
+		//pDC->BitBlt(0, 0, r.Width(), r.Height(), &bmDC, 0, 0, SRCCOPY);
+		pDC->StretchBlt(0, 0, r.Width(), r.Height(), &bmDC,0,0,bi.bmWidth, bi.bmHeight, SRCCOPY);
 		bmDC.SelectObject(pOldbmp);
 
+		m_pimg->Attach((HBITMAP)bmp.Detach());
 	}
 
 	return S_OK;
@@ -269,4 +271,15 @@ void CApplicationDlg::OnFileClose()
 void CApplicationDlg::OnUpdateFileClose(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable(TRUE);
+}
+
+void CApplicationDlg::OnSize(UINT nType, int cx, int cy)
+{
+	if (::IsWindow(m_ctrlImage.GetSafeHwnd()))
+	{
+		m_ctrlImage.MoveWindow(0, 0, cx, cy);
+		Invalidate();
+		__super::OnSize(nType, cx, cy);
+	}
+
 }
