@@ -102,16 +102,29 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 		CDC bmDC;
 		CBitmap *pOldbmp;
 		BITMAP  bi;
+		
 
 		bmp.Attach(m_pimg->Detach());
-		bmDC.CreateCompatibleDC(pDC);
+		bmDC.CreateCompatibleDC(pDC);	
 
 		CRect r(lpDI->rcItem);
+
+		pOldbmp = new CBitmap;
+		pOldbmp->CreateCompatibleBitmap(pDC, r.Width(), r.Height());
+
+		//SetBitmapDimensionEx((HBITMAP)bmp, r.Width(), r.Height(),NULL);
 		
 		pOldbmp = bmDC.SelectObject(&bmp);
 		bmp.GetBitmap(&bi);
+
+		float factorw = 1.;
+		float factorh = 1.;
+
+		factorh = (float)r.Height() / (float)bi.bmHeight;
+		factorw = (float)r.Width() / (float)bi.bmWidth;
+		
 		//pDC->BitBlt(0, 0, r.Width(), r.Height(), &bmDC, 0, 0, SRCCOPY);
-		pDC->StretchBlt(0, 0, r.Width(), r.Height(), &bmDC,0,0,bi.bmWidth, bi.bmHeight, SRCCOPY);
+		pDC->StretchBlt(0, 0, r.Width(), r.Height(), &bmDC,0,0,bi.bmWidth*factorw*scale(r,bi), bi.bmHeight*factorh*scale(r, bi), SRCCOPY);
 		bmDC.SelectObject(pOldbmp);
 
 		m_pimg->Attach((HBITMAP)bmp.Detach());
@@ -282,4 +295,23 @@ void CApplicationDlg::OnSize(UINT nType, int cx, int cy)
 		__super::OnSize(nType, cx, cy);
 	}
 
+}
+
+float CApplicationDlg::scale(CRect r, BITMAP  bi)
+{
+	float f = 1.;
+	if ((bi.bmHeight > r.Height()) && (bi.bmWidth <= r.Width()))
+		f = (float)bi.bmHeight / (float)r.Height();
+	if ((bi.bmWidth > r.Width()) && (bi.bmHeight <= r.Height()))
+		f = (float)bi.bmWidth / (float)r.Width();
+	if (((bi.bmWidth < r.Width()) && (bi.bmHeight < r.Height())) || ((bi.bmWidth > r.Width()) && (bi.bmHeight > r.Height())))
+	{
+		if (r.Height() > r.Width())
+			f = (float)bi.bmWidth / (float)r.Width();
+		else
+		{
+			f = (float)bi.bmHeight / (float)r.Height();
+		}
+	}
+	return f;
 }
