@@ -8,7 +8,7 @@
 #include "afxdialogex.h"
 #include <utility>
 #include <tuple>
-#include <vector>
+
 #include <string>
 
 #ifdef _DEBUG
@@ -22,6 +22,11 @@
 void CStaticImage::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
 	GetParent()->SendMessage( CApplicationDlg::WM_DRAW_IMAGE, (WPARAM)lpDrawItemStruct);
+}
+
+void CStaticHist::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
+{
+	GetParent()->SendMessage(CApplicationDlg::WM_DRAW_HISTOGRAM, (WPARAM)lpDrawItemStruct);
 }
 
 // CAboutDlg dialog used for App About
@@ -63,6 +68,7 @@ void CApplicationDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_IMAGE, m_ctrlImage);
+	DDX_Control(pDX, HISTOGRAM, m_ctrlHist);
 }
 
 BEGIN_MESSAGE_MAP(CApplicationDlg, CDialogEx)
@@ -77,6 +83,7 @@ BEGIN_MESSAGE_MAP(CApplicationDlg, CDialogEx)
 	ON_WM_SIZE()
 	ON_WM_SIZING()
 	ON_MESSAGE(WM_DRAW_IMAGE, OnDrawImage)
+	ON_MESSAGE(WM_DRAW_HISTOGRAM, OnDrawHist)
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
@@ -109,27 +116,123 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 
 		CRect r(lpDI->rcItem);
 
-		pOldbmp = new CBitmap;
-		pOldbmp->CreateCompatibleBitmap(pDC, r.Width(), r.Height());
-
-		//SetBitmapDimensionEx((HBITMAP)bmp, r.Width(), r.Height(),NULL);
-		
 		pOldbmp = bmDC.SelectObject(&bmp);
 		bmp.GetBitmap(&bi);
 
-		float factorw = 1.;
-		float factorh = 1.;
+		pDC->FillSolidRect(r.left, r.top, r.Width(), r.Height(), RGB(211, 211, 211));
 
-		factorh = (float)r.Height() / (float)bi.bmHeight;
-		factorw = (float)r.Width() / (float)bi.bmWidth;
-		
-		//pDC->BitBlt(0, 0, r.Width(), r.Height(), &bmDC, 0, 0, SRCCOPY);
-		pDC->StretchBlt(0, 0, r.Width(), r.Height(), &bmDC,0,0,bi.bmWidth*factorw*scale(r,bi), bi.bmHeight*factorh*scale(r, bi), SRCCOPY);
+		double dWtoH = (double)bi.bmWidth / (double)bi.bmHeight;
+		UINT nHeight = r.Height();
+		UINT nWidth = (UINT)(dWtoH * (double)nHeight);
+
+		if (nWidth > (UINT)r.Width())
+		{
+			nWidth = r.Width();
+			nHeight = (UINT)(nWidth / dWtoH);
+			_ASSERTE(nHeight <= (UINT)r.Height());
+		}
+
+		pDC->SetStretchBltMode(HALFTONE);
+//		pDC->StretchBlt(r.left + (r.Width() - nWidth) / 2, r.top + (r.Height() - nHeight) / 2, nWidth, nHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
+		pDC->StretchBlt(0,0, bi.bmWidth, bi.bmHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
 		bmDC.SelectObject(pOldbmp);
+
+//		histogram(bi.bmWidth, bi.bmHeight, pDC);
+
+		COLORREF col = 0;
+		BYTE bytecol;
+		int rcol, gcol, bcol;
+		int poc = 0;
+	//	for (int i = (r.left + (r.Width() - nWidth) / 2) ; i < nWidth; i++)
+		for (int i = 0; i < bi.bmWidth; i++)
+		{
+			//for (int j = (r.top + (r.Height() - nHeight) / 2) ; j < nHeight; j++)
+			for (int j = 0; j < bi.bmHeight; j++)
+			{
+				col = GetPixel(*pDC, i, j);
+
+				rcol = (int)GetRValue(col);
+				gcol = (int)GetGValue(col);
+				bcol = (int)GetBValue(col);
+				 
+				Red[rcol] = Red[rcol] + 1;
+				Green[gcol] = Green[gcol] + 1;
+				Blue[bcol] = Blue[bcol] + 1;
+
+		//		m_phistR[1];
+				//m_phistG[gcol]++;
+				//m_phistB[bcol]++;*/
+			}
+		}
+		::MessageBox(NULL, __T("vypocet done"), __T(" "), MB_OK | MB_SYSTEMMODAL);
 
 		m_pimg->Attach((HBITMAP)bmp.Detach());
 	}
 
+	return S_OK;
+}
+
+LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
+{
+	LPDRAWITEMSTRUCT lpDI = (LPDRAWITEMSTRUCT)wParam;
+
+	CDC * pDC = CDC::FromHandle(lpDI->hDC);
+
+	//DRAW BITMAP
+	CRect r(lpDI->rcItem);
+
+	if (m_pimg != nullptr)
+	{
+
+	/*	CBitmap bmp;
+		CDC bmDC;
+		CBitmap *pOldbmp;
+		BITMAP  bi;
+
+		bmp.Attach(m_pimg->Detach());
+		bmDC.CreateCompatibleDC(pDC);
+
+		pOldbmp = bmDC.SelectObject(&bmp);
+		//bmp.GetBitmap(&bi);*/
+		FillRect(*pDC, &r, CreateSolidBrush(RGB(255, 255,255)));
+
+	//	m_pimg->Attach((HBITMAP)bmp.Detach());*/
+		CPoint DrawTo;
+		//COLORREF SetDCBrushColor(*(HDC)pDC, RGB(0, 0, 255));
+		SetDCPenColor(lpDI->hDC, RGB(255, 0, 0));
+		pDC->SelectStockObject(DC_PEN);
+		for (int i = 0; i < 255; i++)
+		{
+			pDC->MoveTo(i, r.Height() - Red[i]);
+			pDC->LineTo(i, r.Height());
+		}
+		SetDCPenColor(lpDI->hDC, RGB(0, 255, 0));
+		pDC->SelectStockObject(DC_PEN);
+		for (int i = 0; i < 255; i++)
+		{
+			pDC->MoveTo(i, r.Height() - Green[i]);
+			pDC->LineTo(i, r.Height());
+		}
+
+		SetDCPenColor(lpDI->hDC, RGB(0, 0, 255));
+		pDC->SelectStockObject(DC_PEN);
+		for (int i = 0; i < 255; i++)
+		{
+			pDC->MoveTo(i, r.Height() - Blue[i]);
+			pDC->LineTo(i, r.Height());
+		}
+		
+		/*COLORREF = 0; 
+		SetDCBrushColor((HDC)bmpDC, COLORREF color
+		);*/
+//		pDC->Ellipse(polx,poly, 50, 50);
+
+//		pDC->Rectangle(polx, poly, 50, 50);
+		//m_pimg->Attach((HBITMAP)bmp.Detach());
+	}
+	else
+		FillRect(*pDC, &r, CreateSolidBrush(RGB(255, 255, 255)));
+	
 	return S_OK;
 }
 
@@ -232,7 +335,7 @@ HCURSOR CApplicationDlg::OnQueryDragIcon()
 void CApplicationDlg::OnFileOpen()
 {
 	//vymazanie predosleho obrazka
-	OnFileClose();
+	//OnFileClose();
 	
 	//GET FILE NAME AND CREATE GDIPLUS BITMAP
 	CFileDialog jpgdlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Jpg Files (*.jpg)|*.jpg|Png Files (*.png)|*.png||"));
@@ -245,20 +348,30 @@ void CApplicationDlg::OnFileOpen()
 		//std::wstring cesta = jpgdlg.GetPathName();
 		//Gdiplus::Bitmap bmp(cesta.c_str());
 		CString cesta = jpgdlg.GetPathName();
-		m_pimg = new CImage;
-		m_pimg->Load(cesta);
 
-		if (m_pimg != nullptr)
+		if (m_pimg == nullptr)
 		{
+			m_pimg = new CImage;
+			if (m_pimg->Load(cesta))
+			{
+				delete m_pimg;
+				m_pimg = nullptr;
+			}
 			//::MessageBox(NULL, __T("nacitanie OK"), __T(" "), MB_OK | MB_SYSTEMMODAL);
 			//prekleslenie vsetkeho
-			Invalidate();
 		}
 		else
 		{
-			delete m_pimg;
+			m_pimg->Detach();
+			if (m_pimg->Load(cesta))
+			{
+				delete m_pimg;
+				m_pimg = nullptr;
+			}
 			//	::MessageBox(NULL, __T("nacitanie FAIL"), __T(" "), MB_OK | MB_SYSTEMMODAL);
 		}
+
+		Invalidate();
 		
 	}
 }
@@ -290,19 +403,25 @@ void CApplicationDlg::OnSize(UINT nType, int cx, int cy)
 {
 	if (::IsWindow(m_ctrlImage.GetSafeHwnd()))
 	{
-		m_ctrlImage.MoveWindow(0, 0, cx, cy);
-		Invalidate();
-		__super::OnSize(nType, cx, cy);
+		m_ctrlImage.MoveWindow(0 + cx*0.2, 0, cx - 0.2*cx, cy);
 	}
+
+	if (::IsWindow(m_ctrlHist.GetSafeHwnd()))
+	{
+		m_ctrlHist.MoveWindow(0, cy / 2, cx - 0.8*cx, cy);
+	}
+
+	Invalidate();
+	__super::OnSize(nType, cx, cy);
 
 }
 
 float CApplicationDlg::scale(CRect r, BITMAP  bi)
 {
 	float f = 1.;
-	if ((bi.bmHeight > r.Height()) && (bi.bmWidth <= r.Width()))
+	if ((bi.bmHeight > r.Height())/* && (bi.bmWidth <= r.Width())*/)
 		f = (float)bi.bmHeight / (float)r.Height();
-	if ((bi.bmWidth > r.Width()) && (bi.bmHeight <= r.Height()))
+	if ((bi.bmWidth > r.Width())/*&& (bi.bmHeight <= r.Height())*/)
 		f = (float)bi.bmWidth / (float)r.Width();
 	if (((bi.bmWidth < r.Width()) && (bi.bmHeight < r.Height())) || ((bi.bmWidth > r.Width()) && (bi.bmHeight > r.Height())))
 	{
@@ -312,6 +431,46 @@ float CApplicationDlg::scale(CRect r, BITMAP  bi)
 		{
 			f = (float)bi.bmHeight / (float)r.Height();
 		}
-	}
+	}	
 	return f;
+}
+
+void CApplicationDlg::histogram(int w, int h, CDC *bmDC)
+{
+
+	/*	int *rcol = new int[(w*h)];
+		int *gcol = new int[(w*h)];
+		int *bcol = new int[(w*h)];*/
+		COLORREF col = 0;
+		BYTE bytecol;
+		CDC DC;
+		int rcol, gcol, bcol;
+		DC.CreateCompatibleDC(bmDC);
+
+		for (int i = 0; i < w; i++)
+		{
+			for (int j = 0; j < h; j++)
+			{
+				col = GetPixel(DC, i, j);
+				
+				bytecol = GetRValue(col);
+				rcol = (int)bytecol;
+				bytecol = GetGValue(col);
+				gcol = (int)bytecol;
+				bytecol = GetBValue(col);
+				bcol = (int)bytecol;
+
+			/*	m_phistR[rcol]++;
+				m_phistG[gcol]++;
+				m_phistB[bcol]++;*/
+
+			}
+		}
+
+		/*for (int i = 0; i < w*h; i++)
+		{
+			m_phistR[rcol[i]]++;
+			m_phistG[gcol[i]]++;
+			m_phistB[bcol[i]]++;
+		}*/
 }

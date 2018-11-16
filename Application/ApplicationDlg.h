@@ -5,8 +5,16 @@
 #pragma once
 
 #include <GdiPlus.h>
+#include <vector>
 
 class CStaticImage : public CStatic
+{
+public:
+	// Overridables (for owner draw only)
+	void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct) override;
+};
+
+class CStaticHist : public CStatic
 {
 public:
 	// Overridables (for owner draw only)
@@ -21,7 +29,7 @@ public:
 	enum
 	{
 		WM_DRAW_IMAGE = (WM_USER + 1),
-		WM_DRAW_HISTOGRAM
+		WM_DRAW_HISTOGRAM // = (WM_USER + 1)
 	};
 
 	CApplicationDlg(CWnd* pParent = NULL);	// standard constructor
@@ -42,6 +50,13 @@ public:
 protected:
 	HICON m_hIcon;
 	CImage *m_pimg = nullptr;
+	/*int *m_phistR[255] = {0};
+	int *m_phistG[255] = {0};
+	int *m_phistB[255] = {0};*/
+
+	std::vector<int> Red = std::vector<int>(255,0);
+	std::vector<int> Green = std::vector<int>(255, 0);
+	std::vector<int> Blue = std::vector<int>(255, 0);
 
 //	ULONG_PTR(m_gdiplusToken);
 //	Gdiplus::Bitmap bmp;
@@ -60,10 +75,15 @@ public:
 	afx_msg void OnUpdateFileClose(CCmdUI *pCmdUI);
 	afx_msg void OnClose();
 	afx_msg LRESULT OnDrawImage(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnDrawHist(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	float scale(CRect r, BITMAP  bi);
+	void histogram(int w, int h, CDC *bmDC);
+
 protected:
 	CStaticImage m_ctrlImage;
+	CStaticHist m_ctrlHist;
 	CPoint m_ptImage;
+	CPoint m_ptHist;
 };
