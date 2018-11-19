@@ -54,9 +54,9 @@ protected:
 	int *m_phistG[255] = {0};
 	int *m_phistB[255] = {0};*/
 
-	std::vector<int> Red = std::vector<int>(255,0);
-	std::vector<int> Green = std::vector<int>(255, 0);
-	std::vector<int> Blue = std::vector<int>(255, 0);
+	std::vector<int> Red = std::vector<int>(256,0);
+	std::vector<int> Green = std::vector<int>(256, 0);
+	std::vector<int> Blue = std::vector<int>(256, 0);
 
 //	ULONG_PTR(m_gdiplusToken);
 //	Gdiplus::Bitmap bmp;
@@ -79,7 +79,7 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	float scale(CRect r, BITMAP  bi);
-	void histogram(int w, int h, CDC *bmDC);
+	void histogram();
 
 protected:
 	CStaticImage m_ctrlImage;

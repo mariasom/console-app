@@ -8,7 +8,7 @@
 #include "afxdialogex.h"
 #include <utility>
 #include <tuple>
-
+#include<algorithm>
 #include <string>
 
 #ifdef _DEBUG
@@ -109,7 +109,6 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 		CDC bmDC;
 		CBitmap *pOldbmp;
 		BITMAP  bi;
-		
 
 		bmp.Attach(m_pimg->Detach());
 		bmDC.CreateCompatibleDC(pDC);	
@@ -133,20 +132,20 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 		}
 
 		pDC->SetStretchBltMode(HALFTONE);
-//		pDC->StretchBlt(r.left + (r.Width() - nWidth) / 2, r.top + (r.Height() - nHeight) / 2, nWidth, nHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
-		pDC->StretchBlt(0,0, bi.bmWidth, bi.bmHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
+		pDC->StretchBlt(r.left + (r.Width() - nWidth) / 2, r.top + (r.Height() - nHeight) / 2, nWidth, nHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
+//		pDC->StretchBlt(0,0, bi.bmWidth, bi.bmHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
 		bmDC.SelectObject(pOldbmp);
 
 //		histogram(bi.bmWidth, bi.bmHeight, pDC);
 
-		COLORREF col = 0;
-		BYTE bytecol;
+/*		COLORREF col = 0;
+//		BYTE bytecol;
 		int rcol, gcol, bcol;
 		int poc = 0;
 	//	for (int i = (r.left + (r.Width() - nWidth) / 2) ; i < nWidth; i++)
 		for (int i = 0; i < bi.bmWidth; i++)
 		{
-			//for (int j = (r.top + (r.Height() - nHeight) / 2) ; j < nHeight; j++)
+	//		for (int j = (r.top + (r.Height() - nHeight) / 2) ; j < nHeight; j++)
 			for (int j = 0; j < bi.bmHeight; j++)
 			{
 				col = GetPixel(*pDC, i, j);
@@ -158,13 +157,9 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 				Red[rcol] = Red[rcol] + 1;
 				Green[gcol] = Green[gcol] + 1;
 				Blue[bcol] = Blue[bcol] + 1;
-
-		//		m_phistR[1];
-				//m_phistG[gcol]++;
-				//m_phistB[bcol]++;*/
 			}
-		}
-		::MessageBox(NULL, __T("vypocet done"), __T(" "), MB_OK | MB_SYSTEMMODAL);
+		}*/
+		//::MessageBox(NULL, __T("vypocet done"), __T(" "), MB_OK | MB_SYSTEMMODAL);
 
 		m_pimg->Attach((HBITMAP)bmp.Detach());
 	}
@@ -184,51 +179,41 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 	if (m_pimg != nullptr)
 	{
 
-	/*	CBitmap bmp;
-		CDC bmDC;
-		CBitmap *pOldbmp;
-		BITMAP  bi;
+		FillRect(*pDC, &r, CreateSolidBrush(RGB(0,0,0)));
 
-		bmp.Attach(m_pimg->Detach());
-		bmDC.CreateCompatibleDC(pDC);
-
-		pOldbmp = bmDC.SelectObject(&bmp);
-		//bmp.GetBitmap(&bi);*/
-		FillRect(*pDC, &r, CreateSolidBrush(RGB(255, 255,255)));
-
-	//	m_pimg->Attach((HBITMAP)bmp.Detach());*/
 		CPoint DrawTo;
-		//COLORREF SetDCBrushColor(*(HDC)pDC, RGB(0, 0, 255));
+		int maxr = *std::max_element(Red.begin(),Red.end());
+		int maxg = *std::max_element(Green.begin(), Green.end());
+		int maxb = *std::max_element(Blue.begin(), Blue.end());
+
+		std::vector<int> maxv{maxr,maxb,maxb};
+
+		int maxe = *std::max_element(maxv.begin(), maxv.end());
+
+		float scaleX = r.Width() / (float)256.;
+		float scaleY = r.Height() / (float)(maxe*3);
 		SetDCPenColor(lpDI->hDC, RGB(255, 0, 0));
 		pDC->SelectStockObject(DC_PEN);
-		for (int i = 0; i < 255; i++)
+
+		for (int i = 0; i < Red.size(); i++)
 		{
-			pDC->MoveTo(i, r.Height() - Red[i]);
-			pDC->LineTo(i, r.Height());
+			pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)Red[i]));
+			pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));
 		}
 		SetDCPenColor(lpDI->hDC, RGB(0, 255, 0));
 		pDC->SelectStockObject(DC_PEN);
-		for (int i = 0; i < 255; i++)
+		for (int i = 0; i < Green.size(); i++)
 		{
-			pDC->MoveTo(i, r.Height() - Green[i]);
-			pDC->LineTo(i, r.Height());
+			pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)Green[i]));
+			pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));
 		}
-
 		SetDCPenColor(lpDI->hDC, RGB(0, 0, 255));
 		pDC->SelectStockObject(DC_PEN);
-		for (int i = 0; i < 255; i++)
+		for (int i = 0; i < Blue.size(); i++)
 		{
-			pDC->MoveTo(i, r.Height() - Blue[i]);
-			pDC->LineTo(i, r.Height());
+			pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)Blue[i]));
+			pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));
 		}
-		
-		/*COLORREF = 0; 
-		SetDCBrushColor((HDC)bmpDC, COLORREF color
-		);*/
-//		pDC->Ellipse(polx,poly, 50, 50);
-
-//		pDC->Rectangle(polx, poly, 50, 50);
-		//m_pimg->Attach((HBITMAP)bmp.Detach());
 	}
 	else
 		FillRect(*pDC, &r, CreateSolidBrush(RGB(255, 255, 255)));
@@ -357,6 +342,10 @@ void CApplicationDlg::OnFileOpen()
 				delete m_pimg;
 				m_pimg = nullptr;
 			}
+			else
+			{
+				histogram();
+			}
 			//::MessageBox(NULL, __T("nacitanie OK"), __T(" "), MB_OK | MB_SYSTEMMODAL);
 			//prekleslenie vsetkeho
 		}
@@ -367,6 +356,10 @@ void CApplicationDlg::OnFileOpen()
 			{
 				delete m_pimg;
 				m_pimg = nullptr;
+			}
+			else
+			{
+				histogram();
 			}
 			//	::MessageBox(NULL, __T("nacitanie FAIL"), __T(" "), MB_OK | MB_SYSTEMMODAL);
 		}
@@ -408,7 +401,7 @@ void CApplicationDlg::OnSize(UINT nType, int cx, int cy)
 
 	if (::IsWindow(m_ctrlHist.GetSafeHwnd()))
 	{
-		m_ctrlHist.MoveWindow(0, cy / 2, cx - 0.8*cx, cy);
+		m_ctrlHist.MoveWindow(0, (int)(cy*0.5), cx - 0.8*cx, (int)(cy*0.5));
 	}
 
 	Invalidate();
@@ -435,42 +428,35 @@ float CApplicationDlg::scale(CRect r, BITMAP  bi)
 	return f;
 }
 
-void CApplicationDlg::histogram(int w, int h, CDC *bmDC)
+void CApplicationDlg::histogram()
 {
 
-	/*	int *rcol = new int[(w*h)];
-		int *gcol = new int[(w*h)];
-		int *bcol = new int[(w*h)];*/
-		COLORREF col = 0;
-		BYTE bytecol;
-		CDC DC;
-		int rcol, gcol, bcol;
-		DC.CreateCompatibleDC(bmDC);
+	COLORREF col = 0;
+	int rcol, gcol, bcol;
+	int poc = 0;
+	
+	for (int i = 0; i < Red.size(); i++)
+	{
+		Red[i] = 0;
+		Green[i] = 0;
+		Blue[i] = 0;
+	}
 
-		for (int i = 0; i < w; i++)
+	//	for (int i = (r.left + (r.Width() - nWidth) / 2) ; i < nWidth; i++)
+	for (int i = 0; i < m_pimg->GetWidth(); i++)
+	{
+		//		for (int j = (r.top + (r.Height() - nHeight) / 2) ; j < nHeight; j++)
+		for (int j = 0; j < m_pimg->GetHeight(); j++)
 		{
-			for (int j = 0; j < h; j++)
-			{
-				col = GetPixel(DC, i, j);
-				
-				bytecol = GetRValue(col);
-				rcol = (int)bytecol;
-				bytecol = GetGValue(col);
-				gcol = (int)bytecol;
-				bytecol = GetBValue(col);
-				bcol = (int)bytecol;
+			col = m_pimg->GetPixel(i, j);
 
-			/*	m_phistR[rcol]++;
-				m_phistG[gcol]++;
-				m_phistB[bcol]++;*/
+			rcol = (int)GetRValue(col);
+			gcol = (int)GetGValue(col);
+			bcol = (int)GetBValue(col);
 
-			}
+			Red[rcol] = Red[rcol] + 1;
+			Green[gcol] = Green[gcol] + 1;
+			Blue[bcol] = Blue[bcol] + 1;
 		}
-
-		/*for (int i = 0; i < w*h; i++)
-		{
-			m_phistR[rcol[i]]++;
-			m_phistG[gcol[i]]++;
-			m_phistB[bcol[i]]++;
-		}*/
+	}
 }
