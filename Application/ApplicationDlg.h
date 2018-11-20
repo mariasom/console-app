@@ -80,6 +80,7 @@ public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	float scale(CRect r, BITMAP  bi);
 	void histogram();
+	void draw_hist(CDC *pDC, CRect r,float scaleX, float scaleY, std::vector<int> vect, COLORREF col);
 
 protected:
 	CStaticImage m_ctrlImage;

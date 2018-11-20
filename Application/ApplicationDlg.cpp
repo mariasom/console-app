@@ -179,7 +179,7 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 	if (m_pimg != nullptr)
 	{
 
-		FillRect(*pDC, &r, CreateSolidBrush(RGB(0,0,0)));
+		FillRect(*pDC, &r, CreateSolidBrush(RGB(211, 211, 211)));
 
 		CPoint DrawTo;
 		int maxr = *std::max_element(Red.begin(),Red.end());
@@ -191,8 +191,13 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 		int maxe = *std::max_element(maxv.begin(), maxv.end());
 
 		float scaleX = r.Width() / (float)256.;
-		float scaleY = r.Height() / (float)(maxe*3);
-		SetDCPenColor(lpDI->hDC, RGB(255, 0, 0));
+		float scaleY = r.Height() / (float)(log10(maxe));
+		
+		draw_hist(pDC, r ,scaleX, scaleY, Red, RGB(255, 0, 0));
+		draw_hist(pDC, r, scaleX, scaleY, Green, RGB(0, 255, 0));
+		draw_hist(pDC, r, scaleX, scaleY, Blue, RGB(0, 0, 255));
+		
+		/*SetDCPenColor(lpDI->hDC, RGB(255, 0, 0));
 		pDC->SelectStockObject(DC_PEN);
 
 		for (int i = 0; i < Red.size(); i++)
@@ -213,7 +218,7 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 		{
 			pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)Blue[i]));
 			pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));
-		}
+		}*/
 	}
 	else
 		FillRect(*pDC, &r, CreateSolidBrush(RGB(255, 255, 255)));
@@ -459,4 +464,22 @@ void CApplicationDlg::histogram()
 			Blue[bcol] = Blue[bcol] + 1;
 		}
 	}
+}
+
+void CApplicationDlg::draw_hist(CDC *pDC, CRect r, float scaleX, float scaleY , std::vector<int> vect, COLORREF col)
+{
+	
+	/*SetDCPenColor(r., col);*/
+//	pDC->SelectStockObject(DC_PEN);
+
+	pDC->SelectStockObject(BLACK_PEN);
+	for (int i = 0; i < vect.size(); i++)
+	{
+		
+		pDC->FillSolidRect((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)log10(vect[i])), (int)(scaleX + 1), (int)(scaleY*(float)(log10(vect[i]))), col);
+	
+	/*	pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)vect[i]));
+		pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));*/
+	}
+
 }
