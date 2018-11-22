@@ -85,6 +85,10 @@ BEGIN_MESSAGE_MAP(CApplicationDlg, CDialogEx)
 	ON_MESSAGE(WM_DRAW_IMAGE, OnDrawImage)
 	ON_MESSAGE(WM_DRAW_HISTOGRAM, OnDrawHist)
 	ON_WM_DESTROY()
+//	ON_UPDATE_COMMAND_UI(ID_HISTOGRAM_RED, OnHistRed)
+	ON_COMMAND(ID_HISTOGRAM_RED, OnHistRed)
+	ON_COMMAND(ID_HISTOGRAM_GREEN, OnHistGreen)
+	ON_COMMAND(ID_HISTOGRAM_BLUE, OnHistBlue)
 END_MESSAGE_MAP()
 
 
@@ -193,9 +197,12 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 		float scaleX = r.Width() / (float)256.;
 		float scaleY = r.Height() / (float)(log10(maxe));
 		
-		draw_hist(pDC, r ,scaleX, scaleY, Red, RGB(255, 0, 0));
-		draw_hist(pDC, r, scaleX, scaleY, Green, RGB(0, 255, 0));
-		draw_hist(pDC, r, scaleX, scaleY, Blue, RGB(0, 0, 255));
+		if(check_r)
+			draw_hist(pDC, r ,scaleX, scaleY, Red, RGB(255, 0, 0));
+		if (check_g)
+			draw_hist(pDC, r, scaleX, scaleY, Green, RGB(0, 255, 0));
+		if (check_b)
+			draw_hist(pDC, r, scaleX, scaleY, Blue, RGB(0, 0, 255));
 		
 		/*SetDCPenColor(lpDI->hDC, RGB(255, 0, 0));
 		pDC->SelectStockObject(DC_PEN);
@@ -414,12 +421,12 @@ void CApplicationDlg::OnSize(UINT nType, int cx, int cy)
 
 }
 
-float CApplicationDlg::scale(CRect r, BITMAP  bi)
+/*float CApplicationDlg::scale(CRect r, BITMAP  bi)
 {
 	float f = 1.;
-	if ((bi.bmHeight > r.Height())/* && (bi.bmWidth <= r.Width())*/)
+	if ((bi.bmHeight > r.Height()) && (bi.bmWidth <= r.Width()))
 		f = (float)bi.bmHeight / (float)r.Height();
-	if ((bi.bmWidth > r.Width())/*&& (bi.bmHeight <= r.Height())*/)
+	if ((bi.bmWidth > r.Width())&& (bi.bmHeight <= r.Height()))
 		f = (float)bi.bmWidth / (float)r.Width();
 	if (((bi.bmWidth < r.Width()) && (bi.bmHeight < r.Height())) || ((bi.bmWidth > r.Width()) && (bi.bmHeight > r.Height())))
 	{
@@ -431,7 +438,7 @@ float CApplicationDlg::scale(CRect r, BITMAP  bi)
 		}
 	}	
 	return f;
-}
+} */
 
 void CApplicationDlg::histogram()
 {
@@ -482,4 +489,52 @@ void CApplicationDlg::draw_hist(CDC *pDC, CRect r, float scaleX, float scaleY , 
 		pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));*/
 	}
 
+}
+
+void CApplicationDlg::OnHistRed()
+{
+	CMenu *pMenu = GetMenu();
+	if (GetMenuState(*pMenu, ID_HISTOGRAM_RED, MF_CHECKED))
+	{
+		check_r = false;
+		pMenu->GetSubMenu(1)->CheckMenuItem(ID_HISTOGRAM_RED, MF_UNCHECKED);
+	}
+	else
+	{
+		pMenu->GetSubMenu(1)->CheckMenuItem(ID_HISTOGRAM_RED, MF_CHECKED);
+		check_r = true;
+	}
+	Invalidate();
+}
+
+void CApplicationDlg::OnHistGreen()
+{
+	CMenu *pMenu = GetMenu();
+	if (GetMenuState(*pMenu, ID_HISTOGRAM_GREEN, MF_CHECKED))
+	{
+		check_g = false;
+		pMenu->GetSubMenu(1)->CheckMenuItem(ID_HISTOGRAM_GREEN, MF_UNCHECKED);
+	}
+	else
+	{
+		pMenu->GetSubMenu(1)->CheckMenuItem(ID_HISTOGRAM_GREEN, MF_CHECKED);
+		check_g = true;
+	}
+	Invalidate();
+}
+
+void CApplicationDlg::OnHistBlue()
+{
+	CMenu *pMenu = GetMenu();
+	if (GetMenuState(*pMenu, ID_HISTOGRAM_BLUE, MF_CHECKED))
+	{
+		check_b = false;
+		pMenu->GetSubMenu(1)->CheckMenuItem(ID_HISTOGRAM_BLUE, MF_UNCHECKED);
+	}
+	else
+	{
+		pMenu->GetSubMenu(1)->CheckMenuItem(ID_HISTOGRAM_BLUE, MF_CHECKED);
+		check_b = true;
+	}
+	Invalidate();
 }

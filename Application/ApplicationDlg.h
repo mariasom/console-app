@@ -78,13 +78,20 @@ public:
 	afx_msg LRESULT OnDrawHist(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	float scale(CRect r, BITMAP  bi);
+//	float scale(CRect r, BITMAP  bi);
 	void histogram();
 	void draw_hist(CDC *pDC, CRect r,float scaleX, float scaleY, std::vector<int> vect, COLORREF col);
+	void OnHistRed();
+	void OnHistGreen();
+	void OnHistBlue();
 
 protected:
 	CStaticImage m_ctrlImage;
 	CStaticHist m_ctrlHist;
 	CPoint m_ptImage;
 	CPoint m_ptHist;
+	bool check_r = FALSE;
+	bool check_g = FALSE;
+	bool check_b = FALSE;
+
 };
