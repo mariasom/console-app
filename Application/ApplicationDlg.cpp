@@ -228,7 +228,19 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 		}*/
 	}
 	else
-		FillRect(*pDC, &r, CreateSolidBrush(RGB(255, 255, 255)));
+	{
+		// FillRect(*pDC, &r, CreateSolidBrush(RGB(255, 255, 255)));
+		std::vector<int> tmp;
+		for (int i = 0; i < Green.size(); i++)
+			tmp.push_back(i);
+		float scale = r.Width() / (float)256.;
+		for (int i = 0; i < tmp.size(); i++)
+		{
+			pDC->FillSolidRect((int)(scale*(float)i), (int)((r.Height()) - scale*(float)(tmp[i])), (int)(scale + 1), (int)(scale*(float)(tmp[i])), RGB(0,255,0));
+		
+		}
+
+	}
 	
 	return S_OK;
 }
