@@ -50,6 +50,7 @@ public:
 protected:
 	HICON m_hIcon;
 	CImage *m_pimg = nullptr;
+
 	/*int *m_phistR[255] = {0};
 	int *m_phistG[255] = {0};
 	int *m_phistB[255] = {0};*/
@@ -57,6 +58,9 @@ protected:
 	std::vector<int> Red = std::vector<int>(256,0);
 	std::vector<int> Green = std::vector<int>(256, 0);
 	std::vector<int> Blue = std::vector<int>(256, 0);
+
+	int mine;
+	int maxe;
 
 //	ULONG_PTR(m_gdiplusToken);
 //	Gdiplus::Bitmap bmp;

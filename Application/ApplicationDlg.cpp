@@ -190,12 +190,18 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 		int maxg = *std::max_element(Green.begin(), Green.end());
 		int maxb = *std::max_element(Blue.begin(), Blue.end());
 
-		std::vector<int> maxv{maxr,maxb,maxb};
+		int minr = *std::min_element(Red.begin(), Red.end());
+		int ming = *std::min_element(Green.begin(), Green.end());
+		int minb = *std::min_element(Blue.begin(), Blue.end());
 
-		int maxe = *std::max_element(maxv.begin(), maxv.end());
+		std::vector<int> maxv{maxr,maxg,maxb};
+		std::vector<int> minv{ minr,ming,minb };
+
+		maxe = *std::max_element(maxv.begin(), maxv.end());
+		mine = *std::min_element(minv.begin(), minv.end());
 
 		float scaleX = r.Width() / (float)256.;
-		float scaleY = r.Height() / (float)(log10(maxe));
+		float scaleY = r.Height() / (float)(log10(maxe - mine));
 		
 		if(check_r)
 			draw_hist(pDC, r ,scaleX, scaleY, Red, RGB(255, 0, 0));
@@ -233,11 +239,12 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 		std::vector<int> tmp;
 		for (int i = 0; i < Green.size(); i++)
 			tmp.push_back(i);
-		float scale = r.Width() / (float)256.;
+		float scaleX = r.Width() / (float)256.;
+		float scaleY = r.Height() / (float)256.;
 		for (int i = 0; i < tmp.size(); i++)
 		{
-			pDC->FillSolidRect((int)(scale*(float)i), (int)((r.Height()) - scale*(float)(tmp[i])), (int)(scale + 1), (int)(scale*(float)(tmp[i])), RGB(0,255,0));
-		
+			pDC->FillSolidRect((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)(tmp[i])), (int)(scaleX + 1), (int)(scaleY*(float)(tmp[i])), RGB(0,255,0));
+
 		}
 
 	}
@@ -458,7 +465,11 @@ void CApplicationDlg::histogram()
 	COLORREF col = 0;
 	int rcol, gcol, bcol;
 	int poc = 0;
+	BYTE *bytePtr;
 	
+	bytePtr = (BYTE*)(m_pimg->GetBits());
+	auto dlzka = m_pimg->GetPitch();
+
 	for (int i = 0; i < Red.size(); i++)
 	{
 		Red[i] = 0;
@@ -466,7 +477,25 @@ void CApplicationDlg::histogram()
 		Blue[i] = 0;
 	}
 
-	//	for (int i = (r.left + (r.Width() - nWidth) / 2) ; i < nWidth; i++)
+	
+	for (int j = 0; j < m_pimg->GetHeight(); j++)
+	{
+		for (int i = 0; i < m_pimg->GetWidth(); i++)
+		{
+
+			// red color
+			rcol = bytePtr[3*i + j*dlzka];
+			Red[rcol] = Red[rcol] + 1;
+			// green color
+			gcol = bytePtr[3 * (i) + j*dlzka + 1];
+			Green[gcol] = Green[gcol] + 1;
+			// blue color
+			bcol = bytePtr[3 * (i) + j*dlzka + 2];
+			Blue[bcol] = Blue[bcol] + 1;
+		}
+	}
+
+	/* //	for (int i = (r.left + (r.Width() - nWidth) / 2) ; i < nWidth; i++)
 	for (int i = 0; i < m_pimg->GetWidth(); i++)
 	{
 		//		for (int j = (r.top + (r.Height() - nHeight) / 2) ; j < nHeight; j++)
@@ -482,7 +511,7 @@ void CApplicationDlg::histogram()
 			Green[gcol] = Green[gcol] + 1;
 			Blue[bcol] = Blue[bcol] + 1;
 		}
-	}
+	}*/
 }
 
 void CApplicationDlg::draw_hist(CDC *pDC, CRect r, float scaleX, float scaleY , std::vector<int> vect, COLORREF col)
@@ -494,7 +523,7 @@ void CApplicationDlg::draw_hist(CDC *pDC, CRect r, float scaleX, float scaleY , 
 	pDC->SelectStockObject(BLACK_PEN);
 	for (int i = 0; i < vect.size(); i++)
 	{
-		
+		// SKONTROLOVAT
 		pDC->FillSolidRect((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)log10(vect[i])), (int)(scaleX + 1), (int)(scaleY*(float)(log10(vect[i]))), col);
 	
 	/*	pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)vect[i]));
