@@ -8,7 +8,7 @@
 #include "afxdialogex.h"
 #include <utility>
 #include <tuple>
-#include<algorithm>
+#include <algorithm>
 #include <string>
 
 #ifdef _DEBUG
@@ -89,8 +89,9 @@ BEGIN_MESSAGE_MAP(CApplicationDlg, CDialogEx)
 	ON_COMMAND(ID_HISTOGRAM_RED, OnHistRed)
 	ON_COMMAND(ID_HISTOGRAM_GREEN, OnHistGreen)
 	ON_COMMAND(ID_HISTOGRAM_BLUE, OnHistBlue)
+	ON_COMMAND(ID_FORMAT_FONT, OnOilPaint)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
-
 
 void CApplicationDlg::OnDestroy()
 {
@@ -105,7 +106,7 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 
 	//DRAW BITMAP
 
-	if (m_pimg != nullptr)
+	if (m_pimg != nullptr && check_filter == FALSE)
 	{
 		//::MessageBox(NULL, __T("tu som"), __T("test"), MB_OK);
 
@@ -140,32 +141,42 @@ LRESULT CApplicationDlg::OnDrawImage(WPARAM wParam, LPARAM lParam)
 //		pDC->StretchBlt(0,0, bi.bmWidth, bi.bmHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
 		bmDC.SelectObject(pOldbmp);
 
-//		histogram(bi.bmWidth, bi.bmHeight, pDC);
-
-/*		COLORREF col = 0;
-//		BYTE bytecol;
-		int rcol, gcol, bcol;
-		int poc = 0;
-	//	for (int i = (r.left + (r.Width() - nWidth) / 2) ; i < nWidth; i++)
-		for (int i = 0; i < bi.bmWidth; i++)
-		{
-	//		for (int j = (r.top + (r.Height() - nHeight) / 2) ; j < nHeight; j++)
-			for (int j = 0; j < bi.bmHeight; j++)
-			{
-				col = GetPixel(*pDC, i, j);
-
-				rcol = (int)GetRValue(col);
-				gcol = (int)GetGValue(col);
-				bcol = (int)GetBValue(col);
-				 
-				Red[rcol] = Red[rcol] + 1;
-				Green[gcol] = Green[gcol] + 1;
-				Blue[bcol] = Blue[bcol] + 1;
-			}
-		}*/
-		//::MessageBox(NULL, __T("vypocet done"), __T(" "), MB_OK | MB_SYSTEMMODAL);
-
 		m_pimg->Attach((HBITMAP)bmp.Detach());
+	}
+	if (check_filter == TRUE && m_pimg != nullptr)
+	{			
+			CBitmap bmp;
+			CDC bmDC;
+			CBitmap *pOldbmp;
+			BITMAP  bi;
+
+			bmp.Attach(m_pimg1.Detach());
+			bmDC.CreateCompatibleDC(pDC);
+
+			CRect r(lpDI->rcItem);
+
+			pOldbmp = bmDC.SelectObject(&bmp);
+			bmp.GetBitmap(&bi);
+
+			pDC->FillSolidRect(r.left, r.top, r.Width(), r.Height(), RGB(211, 211, 211));
+
+			double dWtoH = (double)bi.bmWidth / (double)bi.bmHeight;
+			UINT nHeight = r.Height();
+			UINT nWidth = (UINT)(dWtoH * (double)nHeight);
+
+			if (nWidth > (UINT)r.Width())
+			{
+				nWidth = r.Width();
+				nHeight = (UINT)(nWidth / dWtoH);
+				_ASSERTE(nHeight <= (UINT)r.Height());
+			}
+
+			pDC->SetStretchBltMode(HALFTONE);
+			pDC->StretchBlt((r.left + (r.Width() - nWidth) / 2), (r.top + (r.Height() - nHeight) / 2), nWidth, nHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
+			//		pDC->StretchBlt(0,0, bi.bmWidth, bi.bmHeight, &bmDC, 0, 0, bi.bmWidth, bi.bmHeight, SRCCOPY);
+			bmDC.SelectObject(pOldbmp);
+
+			m_pimg1.Attach((HBITMAP)bmp.Detach());
 	}
 
 	return S_OK;
@@ -201,7 +212,7 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 		mine = *std::min_element(minv.begin(), minv.end());
 
 		float scaleX = r.Width() / (float)256.;
-		float scaleY = r.Height() / (float)(log10(maxe - mine));
+		float scaleY = r.Height() / (float)((maxe - mine));
 		
 		if(check_r)
 			draw_hist(pDC, r ,scaleX, scaleY, Red, RGB(255, 0, 0));
@@ -209,29 +220,6 @@ LRESULT CApplicationDlg::OnDrawHist(WPARAM wParam, LPARAM lParam)
 			draw_hist(pDC, r, scaleX, scaleY, Green, RGB(0, 255, 0));
 		if (check_b)
 			draw_hist(pDC, r, scaleX, scaleY, Blue, RGB(0, 0, 255));
-		
-		/*SetDCPenColor(lpDI->hDC, RGB(255, 0, 0));
-		pDC->SelectStockObject(DC_PEN);
-
-		for (int i = 0; i < Red.size(); i++)
-		{
-			pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)Red[i]));
-			pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));
-		}
-		SetDCPenColor(lpDI->hDC, RGB(0, 255, 0));
-		pDC->SelectStockObject(DC_PEN);
-		for (int i = 0; i < Green.size(); i++)
-		{
-			pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)Green[i]));
-			pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));
-		}
-		SetDCPenColor(lpDI->hDC, RGB(0, 0, 255));
-		pDC->SelectStockObject(DC_PEN);
-		for (int i = 0; i < Blue.size(); i++)
-		{
-			pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)Blue[i]));
-			pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));
-		}*/
 	}
 	else
 	{
@@ -350,19 +338,13 @@ HCURSOR CApplicationDlg::OnQueryDragIcon()
 
 void CApplicationDlg::OnFileOpen()
 {
-	//vymazanie predosleho obrazka
-	//OnFileClose();
-	
 	//GET FILE NAME AND CREATE GDIPLUS BITMAP
 	CFileDialog jpgdlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Jpg Files (*.jpg)|*.jpg|Png Files (*.png)|*.png||"));
 
-	//Gdiplus::GdiplusStartupInput gdiplusstartupinput;
-	//GdiplusStartup(&m_gdiplusToken, &gdiplusstartupinput, NULL);
-
+	tmp_bool = false;
+	tmp1_bool = false;
 	if (jpgdlg.DoModal() == IDOK) 
 	{
-		//std::wstring cesta = jpgdlg.GetPathName();
-		//Gdiplus::Bitmap bmp(cesta.c_str());
 		CString cesta = jpgdlg.GetPathName();
 
 		if (m_pimg == nullptr)
@@ -375,10 +357,21 @@ void CApplicationDlg::OnFileOpen()
 			}
 			else
 			{
-				histogram();
+				bytePtr = (BYTE*)(m_pimg->GetBits());
+				dlzka = m_pimg->GetPitch();
+				sirka = m_pimg->GetWidth();
+				vyska = m_pimg->GetHeight();
+
+				//OilPainting();
+
+				m_nTimerID = SetTimer(1, 200, nullptr);
+				std::thread hist_thread(&CApplicationDlg::histogram, this);
+				hist_thread.detach();
+			
+				std::thread oilpaint_thread(&CApplicationDlg::OilPainting, this);
+				oilpaint_thread.detach();
+
 			}
-			//::MessageBox(NULL, __T("nacitanie OK"), __T(" "), MB_OK | MB_SYSTEMMODAL);
-			//prekleslenie vsetkeho
 		}
 		else
 		{
@@ -389,14 +382,27 @@ void CApplicationDlg::OnFileOpen()
 				m_pimg = nullptr;
 			}
 			else
-			{
-				histogram();
+			{				
+				bytePtr = (BYTE*)(m_pimg->GetBits());
+				//bytePtrNew = (BYTE*)(m_pimg->GetBits());
+				dlzka = m_pimg->GetPitch();
+				sirka = m_pimg->GetWidth();
+				vyska = m_pimg->GetHeight();
+
+				//OilPainting();
+
+				m_nTimerID = SetTimer(1, 200, nullptr);
+				std::thread hist_thread(&CApplicationDlg::histogram, this);
+				hist_thread.detach();
+
+				std::thread oilpaint_thread(&CApplicationDlg::OilPainting, this);
+				oilpaint_thread.detach(); 
+				
 			}
-			//	::MessageBox(NULL, __T("nacitanie FAIL"), __T(" "), MB_OK | MB_SYSTEMMODAL);
 		}
 
-		Invalidate();
-		
+		if(tmp_bool == true && tmp1_bool == true)
+			Invalidate();
 	}
 }
 
@@ -440,35 +446,11 @@ void CApplicationDlg::OnSize(UINT nType, int cx, int cy)
 
 }
 
-/*float CApplicationDlg::scale(CRect r, BITMAP  bi)
-{
-	float f = 1.;
-	if ((bi.bmHeight > r.Height()) && (bi.bmWidth <= r.Width()))
-		f = (float)bi.bmHeight / (float)r.Height();
-	if ((bi.bmWidth > r.Width())&& (bi.bmHeight <= r.Height()))
-		f = (float)bi.bmWidth / (float)r.Width();
-	if (((bi.bmWidth < r.Width()) && (bi.bmHeight < r.Height())) || ((bi.bmWidth > r.Width()) && (bi.bmHeight > r.Height())))
-	{
-		if (r.Height() > r.Width())
-			f = (float)bi.bmWidth / (float)r.Width();
-		else
-		{
-			f = (float)bi.bmHeight / (float)r.Height();
-		}
-	}	
-	return f;
-} */
-
 void CApplicationDlg::histogram()
 {
-
 	COLORREF col = 0;
 	int rcol, gcol, bcol;
 	int poc = 0;
-	BYTE *bytePtr;
-	
-	bytePtr = (BYTE*)(m_pimg->GetBits());
-	auto dlzka = m_pimg->GetPitch();
 
 	for (int i = 0; i < Red.size(); i++)
 	{
@@ -476,42 +458,24 @@ void CApplicationDlg::histogram()
 		Green[i] = 0;
 		Blue[i] = 0;
 	}
-
 	
-	for (int j = 0; j < m_pimg->GetHeight(); j++)
+	for (int j = 0; j < vyska; j++)
 	{
-		for (int i = 0; i < m_pimg->GetWidth(); i++)
+		for (int i = 0; i < sirka; i++)
 		{
-
 			// red color
-			rcol = bytePtr[3*i + j*dlzka];
+			rcol =bytePtr[3*i + j*dlzka + 2];
 			Red[rcol] = Red[rcol] + 1;
 			// green color
 			gcol = bytePtr[3 * (i) + j*dlzka + 1];
 			Green[gcol] = Green[gcol] + 1;
 			// blue color
-			bcol = bytePtr[3 * (i) + j*dlzka + 2];
+			bcol = bytePtr[3 * (i) + j*dlzka];
 			Blue[bcol] = Blue[bcol] + 1;
-		}
+		}	
 	}
 
-	/* //	for (int i = (r.left + (r.Width() - nWidth) / 2) ; i < nWidth; i++)
-	for (int i = 0; i < m_pimg->GetWidth(); i++)
-	{
-		//		for (int j = (r.top + (r.Height() - nHeight) / 2) ; j < nHeight; j++)
-		for (int j = 0; j < m_pimg->GetHeight(); j++)
-		{
-			col = m_pimg->GetPixel(i, j);
-
-			rcol = (int)GetRValue(col);
-			gcol = (int)GetGValue(col);
-			bcol = (int)GetBValue(col);
-
-			Red[rcol] = Red[rcol] + 1;
-			Green[gcol] = Green[gcol] + 1;
-			Blue[bcol] = Blue[bcol] + 1;
-		}
-	}*/
+	tmp_bool = true;
 }
 
 void CApplicationDlg::draw_hist(CDC *pDC, CRect r, float scaleX, float scaleY , std::vector<int> vect, COLORREF col)
@@ -524,11 +488,14 @@ void CApplicationDlg::draw_hist(CDC *pDC, CRect r, float scaleX, float scaleY , 
 	for (int i = 0; i < vect.size(); i++)
 	{
 		// SKONTROLOVAT
-		pDC->FillSolidRect((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)log10(vect[i])), (int)(scaleX + 1), (int)(scaleY*(float)(log10(vect[i]))), col);
-	
-	/*	pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)vect[i]));
+		//pDC->FillSolidRect((int)(scaleX*(float)i), (int)(scaleY*(float)log10(vect[i] - mine)), (int)(scaleX + 1), (int)(scaleY*(float)(log10(vect[i] - mine))), col);
+		pDC->FillSolidRect((int)(scaleX*(float)i), (int)(r.Height()- scaleY*(float)((vect[i]-mine))), (int)(scaleX + 1), (int)(scaleY*(float)((vect[i]-mine))), col);
+
+/*		pDC->MoveTo((int)(scaleX*(float)i), (int)((r.Height()) - scaleY*(float)(log10(vect[i]-mine))));
 		pDC->LineTo((int)(scaleX*(float)i), (int)(r.Height()));*/
 	}
+	//pDC->FillSolidRect(0, (int)(r.Height() - scaleY*(float)(log10(vect[0] - mine))),10, scaleY*(float)(log10(vect[0] - mine)), RGB(100,0,100));
+
 
 }
 
@@ -578,4 +545,102 @@ void CApplicationDlg::OnHistBlue()
 		check_b = true;
 	}
 	Invalidate();
+}
+
+void CApplicationDlg::OnOilPaint()
+{
+	CMenu *pMenu = GetMenu();
+	if (GetMenuState(*pMenu, ID_FORMAT_FONT, MF_CHECKED))
+	{
+		check_filter = false;
+		pMenu->GetSubMenu(2)->CheckMenuItem(ID_FORMAT_FONT, MF_UNCHECKED);
+	}
+	else
+	{
+		pMenu->GetSubMenu(2)->CheckMenuItem(ID_FORMAT_FONT, MF_CHECKED);
+		check_filter = true;
+	}
+
+	Invalidate();
+}
+
+void CApplicationDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if (tmp_bool == true && tmp1_bool == true)
+	{
+		KillTimer(m_nTimerID);
+		Invalidate();
+	}
+}
+
+void CApplicationDlg::OilPainting()
+{
+	int radius = 5;
+	float intenzita = 10.;
+	
+	std::vector<int> nSumR = std::vector<int>(256, 0);
+	std::vector<int> nSumG = std::vector<int>(256, 0);
+	std::vector<int> nSumB = std::vector<int>(256, 0);
+
+	std::vector<int> nIntensityCount = std::vector<int>(256, 0);
+
+	if (/*check_filter == TRUE && */m_pimg != nullptr)
+	{
+		m_pimg1.Create(sirka, vyska, m_pimg->GetBPP(), NULL);
+
+		for (int nY = radius; nY < vyska - radius; nY++)
+		{
+			for (int nX = radius; nX < sirka - radius; nX++)
+			{
+				for (int nY_O = -radius; nY_O <= radius; nY_O++)
+				{
+					for (int nX_O = -radius; nX_O <= radius; nX_O++)
+					{
+					
+						int nR = bytePtr[(nX + nX_O) * 3 + (nY + nY_O) * dlzka + 2];
+						int nG = bytePtr[(nX + nX_O) * 3 + (nY + nY_O) * dlzka + 1];
+						int nB = bytePtr[(nX + nX_O) * 3 + (nY + nY_O) * dlzka ];
+
+						int nCurIntensity = (((nR + nG + nB) / 3.0) * intenzita) / 255.;
+						if (nCurIntensity > 255)
+							nCurIntensity = 255;
+						int i = nCurIntensity;
+						nIntensityCount[i] = nIntensityCount[i] + 1;
+
+						nSumR[i] = nSumR[i] + nR;
+						nSumG[i] = nSumG[i] + nG;
+						nSumB[i] = nSumB[i] + nB;
+					}
+				}
+
+				int nCurMax = 0;
+				int nMaxIndex = 0;
+				for (int nI = 0; nI < 256; nI++)
+				{
+					if (nIntensityCount[nI] > nCurMax)
+					{
+						nCurMax = nIntensityCount[nI];
+						nMaxIndex = nI;
+					}
+				}
+
+				BYTE r = (nSumR[nMaxIndex] / nCurMax);
+				BYTE g = (nSumG[nMaxIndex] / nCurMax);
+				BYTE b = (nSumB[nMaxIndex] / nCurMax);
+
+				m_pimg1.SetPixel(nX, nY, RGB(r,g,b));
+
+				for (int i = 0; i < nSumB.size(); i++)
+				{
+					nSumR[i] = 0;
+					nSumG[i] = 0;
+					nSumB[i] = 0;
+					nIntensityCount[i] = 0;
+				}
+			}
+		}
+
+	}
+	tmp1_bool = true;
+	::MessageBox(NULL, __T("koniec vypoctu"), __T(" "), MB_OK | MB_SYSTEMMODAL);
 }

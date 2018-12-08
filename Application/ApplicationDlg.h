@@ -6,6 +6,7 @@
 
 #include <GdiPlus.h>
 #include <vector>
+#include<thread>
 
 class CStaticImage : public CStatic
 {
@@ -50,6 +51,7 @@ public:
 protected:
 	HICON m_hIcon;
 	CImage *m_pimg = nullptr;
+	CImage m_pimg1;
 
 	/*int *m_phistR[255] = {0};
 	int *m_phistG[255] = {0};
@@ -69,6 +71,7 @@ protected:
 	BOOL OnInitDialog() override;
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 
@@ -88,6 +91,8 @@ public:
 	void OnHistRed();
 	void OnHistGreen();
 	void OnHistBlue();
+	void OilPainting();
+	void OnOilPaint();
 
 protected:
 	CStaticImage m_ctrlImage;
@@ -97,5 +102,12 @@ protected:
 	bool check_r = FALSE;
 	bool check_g = FALSE;
 	bool check_b = FALSE;
-
+	bool check_filter = FALSE;
+	bool tmp_bool = false;
+	bool tmp1_bool = false;
+	BYTE *bytePtr = nullptr;
+	int dlzka = 0;
+	int vyska = 0;
+	int sirka = 0;
+	UINT_PTR m_nTimerID;
 };
